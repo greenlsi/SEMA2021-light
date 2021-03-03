@@ -3,7 +3,7 @@ ltl enciende {
 }
 
 ltl apaga {
-	[] (deadline -> <> !luz)
+	[] ((deadline && (!boton W !luz)) -> <> !luz)
 }
 
 
@@ -22,15 +22,18 @@ active proctype fsm ()
     do
     :: (estado == OFF) -> atomic {
         if
-        :: (boton) -> luz = 1; printf("reset_timer(30)\n"); estado = ON;
+        :: (boton) -> luz = 1; boton = 0; deadline = 0; 
+		printf("reset_timer(30)\n"); estado = ON;
     		printf ("estado = %d, boton = %d, deadline = %d, luz = %d\n",
 	    		estado, boton, deadline, luz);
         fi
     }
     :: (estado == ON) -> atomic {
         if
-        :: (boton) -> printf("reset_timer(30)\n")
-        :: (deadline) -> luz = 0; estado = OFF;
+        :: (boton) -> boton = 0; deadline = 0; printf("reset_timer(30)\n")
+    		printf ("estado = %d, boton = %d, deadline = %d, luz = %d\n",
+	    		estado, boton, deadline, luz);
+        :: (deadline) -> deadline = 0; luz = 0; estado = OFF;
     		printf ("estado = %d, boton = %d, deadline = %d, luz = %d\n",
 	    		estado, boton, deadline, luz);
         fi
@@ -41,9 +44,13 @@ active proctype fsm ()
 active proctype entorno ()
 {
     do
-    :: !boton -> skip
-    :: boton = 1
-    :: deadline = 1
+    :: if
+       :: skip -> skip
+       :: boton = 1
+       :: deadline = 1
+       fi ;
+       printf ("boton = %d, deadline = %d, luz = %d\n",
+	    	boton, deadline, luz);
     od
 }
 
